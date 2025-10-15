@@ -1,103 +1,161 @@
-import Image from "next/image";
+'use client';
+
+import { useState } from "react";
+import Header from "@/components/common/Header/page";
+import Search from "@/components/Search/page";
+import Status from "@/components/Status/page";
+
+// AviationStack API types
+interface FlightDataAPI {
+  flight_date: string;
+  flight_status: string;
+  departure: {
+    airport: string;
+    timezone: string;
+    iata: string;
+    icao: string;
+    terminal: string | null;
+    gate: string | null;
+    delay: string | null;
+    scheduled: string | null;
+    estimated: string | null;
+    actual: string | null;
+    estimated_runway: string | null;
+    actual_runway: string | null;
+  };
+  arrival: {
+    airport: string;
+    timezone: string;
+    iata: string;
+    icao: string;
+    terminal: string | null;
+    gate: string | null;
+    baggage: string | null;
+    scheduled: string | null;
+    delay: string | null;
+    estimated: string | null;
+    actual: string | null;
+    estimated_runway: string | null;
+    actual_runway: string | null;
+  };
+  airline: {
+    name: string;
+    iata: string;
+    icao: string;
+  };
+  flight: {
+    number: string;
+    iata: string;
+    icao: string;
+    codeshared: any;
+  };
+  aircraft: any;
+  live: any;
+}
+
+interface AviationStackResponse {
+  pagination: {
+    limit: number;
+    offset: number;
+    count: number;
+    total: number;
+  };
+  data: FlightDataAPI[];
+}
 
 export default function Home() {
-  return (
-    <div className="font-sans grid grid-rows-[20px_1fr_20px] items-center justify-items-center min-h-screen p-8 pb-20 gap-16 sm:p-20">
-      <main className="flex flex-col gap-[32px] row-start-2 items-center sm:items-start">
-        <Image
-          className="dark:invert"
-          src="/next.svg"
-          alt="Next.js logo"
-          width={180}
-          height={38}
-          priority
-        />
-        <ol className="font-mono list-inside list-decimal text-sm/6 text-center sm:text-left">
-          <li className="mb-2 tracking-[-.01em]">
-            Get started by editing{" "}
-            <code className="bg-black/[.05] dark:bg-white/[.06] font-mono font-semibold px-1 py-0.5 rounded">
-              src/app/page.tsx
-            </code>
-            .
-          </li>
-          <li className="tracking-[-.01em]">
-            Save and see your changes instantly.
-          </li>
-        </ol>
+  const [flights, setFlights] = useState<FlightDataAPI[]>([]);
+  const [isLoading, setIsLoading] = useState(false);
+  const [hasSearched, setHasSearched] = useState(false);
+  const [error, setError] = useState<string | null>(null);
 
-        <div className="flex gap-4 items-center flex-col sm:flex-row">
-          <a
-            className="rounded-full border border-solid border-transparent transition-colors flex items-center justify-center bg-foreground text-background gap-2 hover:bg-[#383838] dark:hover:bg-[#ccc] font-medium text-sm sm:text-base h-10 sm:h-12 px-4 sm:px-5 sm:w-auto"
-            href="https://vercel.com/new?utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-            target="_blank"
-            rel="noopener noreferrer"
-          >
-            <Image
-              className="dark:invert"
-              src="/vercel.svg"
-              alt="Vercel logomark"
-              width={20}
-              height={20}
-            />
-            Deploy now
-          </a>
-          <a
-            className="rounded-full border border-solid border-black/[.08] dark:border-white/[.145] transition-colors flex items-center justify-center hover:bg-[#f2f2f2] dark:hover:bg-[#1a1a1a] hover:border-transparent font-medium text-sm sm:text-base h-10 sm:h-12 px-4 sm:px-5 w-full sm:w-auto md:w-[158px]"
-            href="https://nextjs.org/docs?utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-            target="_blank"
-            rel="noopener noreferrer"
-          >
-            Read our docs
-          </a>
-        </div>
-      </main>
-      <footer className="row-start-3 flex gap-[24px] flex-wrap items-center justify-center">
-        <a
-          className="flex items-center gap-2 hover:underline hover:underline-offset-4"
-          href="https://nextjs.org/learn?utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-          target="_blank"
-          rel="noopener noreferrer"
-        >
-          <Image
-            aria-hidden
-            src="/file.svg"
-            alt="File icon"
-            width={16}
-            height={16}
-          />
-          Learn
-        </a>
-        <a
-          className="flex items-center gap-2 hover:underline hover:underline-offset-4"
-          href="https://vercel.com/templates?framework=next.js&utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-          target="_blank"
-          rel="noopener noreferrer"
-        >
-          <Image
-            aria-hidden
-            src="/window.svg"
-            alt="Window icon"
-            width={16}
-            height={16}
-          />
-          Examples
-        </a>
-        <a
-          className="flex items-center gap-2 hover:underline hover:underline-offset-4"
-          href="https://nextjs.org?utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-          target="_blank"
-          rel="noopener noreferrer"
-        >
-          <Image
-            aria-hidden
-            src="/globe.svg"
-            alt="Globe icon"
-            width={16}
-            height={16}
-          />
-          Go to nextjs.org →
-        </a>
-      </footer>
+  const handleSearch = async (query: string) => {
+    setIsLoading(true);
+    setError(null);
+    setHasSearched(true);
+
+    try {
+      // You'll need to replace 'YOUR_API_KEY' with your actual AviationStack API key
+      const API_KEY = process.env.NEXT_PUBLIC_AVIATIONSTACK_API_KEY || 'YOUR_API_KEY';
+      
+      // Build API URL based on search query
+      let apiUrl = `https://api.aviationstack.com/v1/flights?access_key=${API_KEY}&limit=10`;
+      
+      // Determine search type and add appropriate parameters
+      if (query.match(/^[A-Z]{2,3}\d+$/i)) {
+        apiUrl += `&flight_iata=${query.toUpperCase()}`;
+      } else if (query.match(/^[A-Z]{3}\s+to\s+[A-Z]{3}$/i)) {
+        const [dep, arr] = query.split(' to ').map(code => code.trim().toUpperCase());
+        apiUrl += `&dep_iata=${dep}&arr_iata=${arr}`;
+      } else if (query.match(/^[A-Z]{3}$/i)) {
+        apiUrl += `&dep_iata=${query.toUpperCase()}`;
+      } else {
+        apiUrl += `&airline_name=${encodeURIComponent(query)}`;
+      }
+
+      const response = await fetch(apiUrl);
+      
+      if (!response.ok) {
+        throw new Error(`API Error: ${response.status} ${response.statusText}`);
+      }
+
+      const data: AviationStackResponse = await response.json();
+      
+      if (data.data && data.data.length > 0) {
+        setFlights(data.data);
+      } else {
+        setFlights([]);
+        setError('No flights found matching your search criteria.');
+      }
+    } catch (err) {
+      console.error('Search error:', err);
+      setError(err instanceof Error ? err.message : 'Failed to search flights. Please try again.');
+      setFlights([]);
+    } finally {
+      setIsLoading(false);
+    }
+  };
+
+  return (
+    <div className="font-sans min-h-screen relative overflow-hidden">
+      {/* Hero background */}
+      <div
+        className="absolute inset-0 bg-cover bg-center bg-no-repeat"
+        style={{
+          backgroundImage: "url(/hero-background.svg)",
+          backgroundSize: "cover",
+          backgroundPosition: "center",
+        }}
+      />
+
+      {/* Content overlay */}
+      <div className="relative z-10 w-full h-full">
+        <Header />
+        
+        <main className="flex flex-col gap-[32px] items-center w-full p-8 pb-20 sm:p-20">
+          <h1 className="text-3xl font-bold text-gray-900 text-center sm:text-left">
+            Check Your Flight Status!
+          </h1>
+          
+          <div className="w-full max-w-8xl">
+            <Search onSearch={handleSearch} isLoading={isLoading} />
+          </div>
+
+          {/* Error message */}
+          {error && (
+            <div className="w-full max-w-6xl mx-auto p-4 bg-red-100 border border-red-400 text-red-700 rounded-lg">
+              <p className="text-center">{error}</p>
+            </div>
+          )}
+
+          {/* Results section */}
+          {(hasSearched || flights.length > 0) && (
+            <div className="w-full max-w-8xl">
+              <Status flights={flights} isLoading={isLoading} />
+            </div>
+          )}
+        </main>
+      </div>
     </div>
   );
 }
