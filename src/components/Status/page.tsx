@@ -47,10 +47,10 @@ interface FlightDataAPI {
     number: string;
     iata: string;
     icao: string;
-    codeshared: any;
+    codeshared: unknown;
   };
-  aircraft: any;
-  live: any;
+  aircraft: unknown;
+  live: unknown;
 }
 
 // Helper functions
@@ -410,7 +410,7 @@ export default function Status({ flights = [], isLoading = false }: StatusProps)
                   <div className="space-y-2">
                     <div><span className="font-medium">Flight Number:</span> {selectedFlight.flight.iata}</div>
                     <div><span className="font-medium">Airline:</span> {selectedFlight.airline.name}</div>
-                    <div><span className="font-medium">Aircraft:</span> {selectedFlight.aircraft || 'Not Available'}</div>
+                    <div><span className="font-medium">Aircraft:</span> {selectedFlight.aircraft ? JSON.stringify(selectedFlight.aircraft) : 'Not Available'}</div>
                     <div><span className="font-medium">Status:</span> 
                       <span className={`ml-2 px-2 py-1 rounded text-xs ${getStatusColor(selectedFlight.flight_status)}`}>
                         {getStatusDisplay(selectedFlight.flight_status)}

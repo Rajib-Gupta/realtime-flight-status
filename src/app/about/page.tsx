@@ -32,7 +32,7 @@ export default function AboutPage() {
             <div className="prose max-w-none text-gray-600 space-y-6">
               <p>
                 AirStatus is a comprehensive flight tracking application that provides real-time 
-                flight information, status updates, and monitoring capabilities. Whether you're a 
+                flight information, status updates, and monitoring capabilities. Whether you&apos;re a 
                 frequent traveler, meeting someone at the airport, or simply curious about flight 
                 operations, AirStatus has you covered.
               </p>

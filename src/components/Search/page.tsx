@@ -55,7 +55,7 @@ export default function Search({ onSearch, isLoading = false }: SearchProps) {
       
       {/* Search suggestions */}
       <div className="mt-3 text-sm text-gray-600 text-center">
-        <p>Try searching: "RJ734", "Royal Jordanian", "AMM to RUH", or "Flight AA123"</p>
+        <p>Try searching: &ldquo;RJ734&rdquo;, &ldquo;Royal Jordanian&rdquo;, &ldquo;AMM to RUH&rdquo;, or &ldquo;Flight AA123&rdquo;</p>
       </div>
     </div>
   );

@@ -47,10 +47,10 @@ interface FlightDataAPI {
     number: string;
     iata: string;
     icao: string;
-    codeshared: any;
+    codeshared: unknown;
   };
-  aircraft: any;
-  live: any;
+  aircraft: unknown;
+  live: unknown;
 }
 
 interface AviationStackResponse {
